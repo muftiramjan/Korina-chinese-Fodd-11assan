@@ -56,9 +56,6 @@ const verifToken = async (req, res, next) => {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-
     const carCallection = client.db('car').collection('carCallection');
     const orderCallection = client.db('car').collection('orderCallection');
 
@@ -72,8 +69,6 @@ async function run() {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-          // secure:false,
-          // sameSite: 'none'
         })
         .send({ success: true })
     })
@@ -83,8 +78,6 @@ async function run() {
       const user = req.body;
       res.clearCookie('token', { maxAge: 0 }).send({ success: true })
     })
-
-
 
     // carCallection
     app.get('/carServes', async (req, res) => {
