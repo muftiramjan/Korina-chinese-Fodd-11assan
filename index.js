@@ -6,7 +6,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 const app = express();
-// console.log(process.env.DB_USER);
+
 
 // medlwer
 const corsOptions = {
@@ -114,6 +114,20 @@ app.get('/orderss',async(req,res) => {
   res.send(result)
 })
 
+app.get('/orders/:id', logger, async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) }
+  const options = {
+    // Include only the `title` and `imdb` fields in the returned document
+    projection: {
+      _id: 1, food_name: 1, food_image: 1, donator_image: 1,
+      donator_name: 1, food_quantity: 1, expired_datetime: 1, additional_notes: 1, pickup_location: 1,
+    },
+  };
+
+  const result = await orderCallection.findOne(query,options)
+  res.send(result)
+})
 
     app.get('/orders', logger,  async (req, res) => {
       console.log(req.query.email);
@@ -144,6 +158,7 @@ app.get('/orderss',async(req,res) => {
       const result = await orderCallection.deleteOne(query)
       res.send(result)
     })
+   
 
     app.patch('/orders/:id', logger, async (req, res) => {
       const id = req.params.id;
