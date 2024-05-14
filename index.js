@@ -1,18 +1,24 @@
-require('dotenv').config();
-const cookieParser = require('cookie-parser');
 const express = require('express');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const app = express();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+require('dotenv').config();
 const port = process.env.PORT || 5000;
+const app = express();
 // console.log(process.env.DB_USER);
 
 // medlwer
-app.use(cors({
-  // origin: ['http://localhost:5173'],
-  credentials: true
-}));
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'https://my-car-calain-saite.web.app',
+    'https://my-car-calain-saite.firebaseapp.com',
+  ],
+  credentials: true,
+  optionSuccessStatus: 200,
+}
+app.use(cors(corsOptions))
 app.use(express.json());
 app.use(cookieParser());
 
@@ -52,7 +58,11 @@ const verifToken = async (req, res, next) => {
     next();
   })
 }
-
+const coceoption={
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production'? true : false,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+}
 
 async function run() {
   try {
@@ -65,18 +75,14 @@ async function run() {
       // console.log(user);
       const token = jwt.sign(user, process.env.ACCES_TOKEN_SECRET, { expiresIn: '1h' });
       res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        })
+        .cookie('token', token, coceoption)
         .send({ success: true })
     })
 
 
     app.post('/loguot', async (req, res) => {
       const user = req.body;
-      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+      res.clearCookie('token', {...coceoption, maxAge: 0 }).send({ success: true })
     })
 
     // carCallection
