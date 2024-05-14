@@ -95,15 +95,14 @@ async function run() {
     app.get('/carServes/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const options = {
-        // Include only the `title` and `imdb` fields in the returned document
-        projection: {
-          _id: 1, food_name: 1, food_image: 1, donator_image: 1,
-          donator_name: 1, food_quantity: 1, expired_datetime: 1, additional_notes: 1, pickup_location: 1,
-        },
-      };
+      const result = await carCallection.findOne(query);
+      res.send(result)
+    })
 
-      const result = await carCallection.findOne(query, options);
+    app.get('/available/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await orderCallection.findOne(query);
       res.send(result)
     })
 
@@ -114,7 +113,7 @@ app.get('/orderss',async(req,res) => {
   res.send(result)
 })
 
-app.get('/orders/:id', logger, async (req, res) => {
+app.get('/orders:id', logger, async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) }
   const options = {
@@ -131,10 +130,10 @@ app.get('/orders/:id', logger, async (req, res) => {
 
     app.get('/orders', logger,  async (req, res) => {
       console.log(req.query.email);
-      // console.log('tok tik khan', req.cookies.token);
-      // if (req.query.email !== req.user.email) {
-      //   return res.status(403).send({ massage: 'forbidden' })
-      // };
+      console.log('tok tik khan', req.cookies.token);
+      if (req.query.email !== req.user.email) {
+        return res.status(403).send({ massage: 'forbidden' })
+      };
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email }
