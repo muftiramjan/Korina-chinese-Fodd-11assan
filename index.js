@@ -80,7 +80,6 @@ async function run() {
         .send({ success: true })
     })
 
-
     app.post('/loguot', async (req, res) => {
       const user = req.body;
       res.clearCookie('token', {...coceoption, maxAge: 0 }).send({ success: true })
@@ -144,8 +143,6 @@ app.get('/orders:id', logger,verifToken, async (req, res) => {
       res.send(result)
     })
 
-
-
     app.post('/order', async (req, res) => {
       const order = req.body;
       console.log(order);
@@ -175,12 +172,11 @@ app.get('/orders:id', logger,verifToken, async (req, res) => {
       const result = await orderCallection.updateOne(filter, updateDoc);
       res.send(result);
     })
-    // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+
+    
   }
 }
 run().catch(console.dir);
