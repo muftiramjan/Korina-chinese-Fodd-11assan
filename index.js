@@ -35,6 +35,7 @@ const client = new MongoClient(uri, {
   }
 });
 
+
 // meddlewares
 const logger = async (req, res, next) => {
   console.log('colde', req.host, req.originalUrl);
@@ -69,7 +70,7 @@ async function run() {
     const carCallection = client.db('car').collection('carCallection');
     const orderCallection = client.db('car').collection('orderCallection');
 
-    // jwt related
+    // jwt token related
     app.post('/jwt', logger, async (req, res) => {
       const user = req.body;
       // console.log(user);
