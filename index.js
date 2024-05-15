@@ -101,6 +101,7 @@ async function run() {
 
     app.get('/available/:id', async (req, res) => {
       const id = req.params.id;
+      
       const query = { _id: new ObjectId(id) };
       const result = await orderCallection.findOne(query);
       res.send(result)
@@ -113,7 +114,7 @@ app.get('/orderss',async(req,res) => {
   res.send(result)
 })
 
-app.get('/orders:id', logger, async (req, res) => {
+app.get('/orders:id', logger,verifToken, async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) }
   const options = {
@@ -128,7 +129,7 @@ app.get('/orders:id', logger, async (req, res) => {
   res.send(result)
 })
 
-    app.get('/orders', logger,  async (req, res) => {
+    app.get('/orders', logger, verifToken, async (req, res) => {
       console.log(req.query.email);
       console.log('tok tik khan', req.cookies.token);
       if (req.query.email !== req.user.email) {
