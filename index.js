@@ -9,16 +9,24 @@ const app = express();
 
 
 // medlwer
-const corsOptions = {
+// const corsOptions = {
+//   origin: [
+//     'http://localhost:5173',
+//     'https://my-car-calain-saite.web.app',
+//     'https://my-car-calain-saite.firebaseapp.com',
+//   ],
+//   credentials: true,
+//   optionSuccessStatus: 200,
+// }
+app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://my-car-calain-saite.web.app',
-    'https://my-car-calain-saite.firebaseapp.com',
+    'https://my-car-calain-saite.firebaseapp.com'
   ],
-  credentials: true,
-  optionSuccessStatus: 200,
-}
-app.use(cors(corsOptions))
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -42,26 +50,10 @@ const logger = async (req, res, next) => {
   next();
 }
 
-const verifToken = async (req, res, next) => {
-  const token = req.cookies?.token;
-  console.log('value of meddelewre', token);
-  if (!token) {
-    return res.status(401).send({ Message: 'forbiddin' })
-  }
 
-  jwt.verify(token, process.env.ACCES_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      console.log(err);
-      return res.status(401).sen({ massege: 'anathoraged' })
-    }
-    console.log('value of tha token', decoded);
-    req.user = decoded;
-    next();
-  })
-}
-const coceoption={
+const coceoption = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production'? true : false,
+  secure: process.env.NODE_ENV === 'production' ? true : false,
   sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
 }
 
@@ -69,23 +61,37 @@ async function run() {
   try {
     const carCallection = client.db('car').collection('carCallection');
     const orderCallection = client.db('car').collection('orderCallection');
+    const mraqueeDataCallection = client.db('car').collection('mraqueeData');
 
-    // jwt token related
-    app.post('/jwt', logger, async (req, res) => {
+
+    //  Jwt relatedApi
+    app.post('/jwt', async (req, res) => {
       const user = req.body;
-      // console.log(user);
-      const token = jwt.sign(user, process.env.ACCES_TOKEN_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      console.log(user);
       res
-        .cookie('token', token, coceoption)
+        .cookie('accessToken', token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'none',
+        })
+
         .send({ success: true })
     })
 
+
+    // delete api 
     app.post('/loguot', async (req, res) => {
       const user = req.body;
-      res.clearCookie('token', {...coceoption, maxAge: 0 }).send({ success: true })
+      res.clearCookie('token', { ...coceoption, maxAge: 0 }).send({ success: true })
     })
 
     // carCallection
+    app.get('/mraquee', async (req, res) => {
+      const corsur = mraqueeDataCallection.find();
+      const result = await corsur.toArray();
+      res.send(result)
+    })
     app.get('/carServes', async (req, res) => {
       const corsur = carCallection.find();
       const result = await corsur.toArray();
@@ -101,40 +107,28 @@ async function run() {
 
     app.get('/available/:id', async (req, res) => {
       const id = req.params.id;
-      
+
       const query = { _id: new ObjectId(id) };
       const result = await orderCallection.findOne(query);
       res.send(result)
     })
 
     // orderCallection 
-app.get('/orderss',async(req,res) => {
-  const corsur=orderCallection.find();
-  const result=await corsur.toArray();
-  res.send(result)
-})
+    app.get('/orderss', async (req, res) => {
+      const corsur = orderCallection.find();
+      const result = await corsur.toArray();
+      res.send(result)
+    })
 
-app.get('/orders:id', logger,verifToken, async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) }
-  const options = {
-    // Include only the `title` and `imdb` fields in the returned document
-    projection: {
-      _id: 1, food_name: 1, food_image: 1, donator_image: 1,
-      donator_name: 1, food_quantity: 1, expired_datetime: 1, additional_notes: 1, pickup_location: 1,
-    },
-  };
+    app.get('/singleOrders/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await orderCallection.findOne(query)
+      res.send(result)
+    })
 
-  const result = await orderCallection.findOne(query,options)
-  res.send(result)
-})
-
-    app.get('/orders', logger, verifToken, async (req, res) => {
+    app.get('/orders', async (req, res) => {
       console.log(req.query.email);
-      console.log('tok tik khan', req.cookies.token);
-      if (req.query.email !== req.user.email) {
-        return res.status(403).send({ massage: 'forbidden' })
-      };
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email }
@@ -142,11 +136,30 @@ app.get('/orders:id', logger,verifToken, async (req, res) => {
       const result = await orderCallection.find(query).toArray();
       res.send(result)
     })
+    app.get('/request', async (req, res) => {
+      console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email }
+      }
+      const result = await carCallection.find(query).toArray();
+      res.send(result)
+    })
+    
+    app.get('/order', async (req, res) => {
+      const corsur = orderCallection.find();
+      const result = await corsur.toArray();
+      res.send(result)
+    })
 
     app.post('/order', async (req, res) => {
       const order = req.body;
-      console.log(order);
       const result = await orderCallection.insertOne(order)
+      res.send(result)
+    })
+    app.post('/request', async (req, res) => {
+      const request = req.body;
+      const result = await carCallection.insertOne(request)
       res.send(result)
     })
 
@@ -156,39 +169,49 @@ app.get('/orders:id', logger,verifToken, async (req, res) => {
       const result = await orderCallection.deleteOne(query)
       res.send(result)
     })
-   
 
-    app.patch('/orders/:id', logger, async (req, res) => {
+    // logger
+    app.patch('/updateFood/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
       const updateOrder = req.body;
-      console.log(updateOrder);
+      const filter = { _id: new ObjectId(id) };
 
       const updateDoc = {
         $set: {
-          status: updateOrder.status
-        }
+          name: updateOrder.name,
+          email: updateOrder.email,
+          donator_image: updateOrder.donator_image,
+          food_image: updateOrder.food_image,
+          food_quantity: updateOrder.food_quantity,
+          date: updateOrder.date,
+          additional_notes: updateOrder.additional_notes,
+          pickup_location: updateOrder.pickup_location,
+        },
       };
+
       const result = await orderCallection.updateOne(filter, updateDoc);
       res.send(result);
-    })
+    });
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
 
-    
+
   }
 }
 run().catch(console.dir);
 
-
-
-
+app.post('/send-message', (req, res) => {
+  const { message } = req.body;
+  // Process the message, send notifications, etc.
+  console.log(`Received message: ${message}`);
+  res.send({ success: true });
+});
 
 app.get('/', (req, res) => {
-  res.send('doctor is runig')
+  res.send('eliven assainment runing')
 })
 
 app.listen(port, () => {
-  console.log(`doctor servr is comming son ${port}`);
+  console.log(`eliven assainment runing ${port}`);
 })
